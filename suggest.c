@@ -51,13 +51,13 @@ int main (const int argc, const char **argv)
 	size_t dict_size = load_dict(opts.file_name, &dict);
 
 	struct timespec start_point;
-	clock_gettime(CLOCK_MONOTONIC_RAW, &start_point);
+	clock_gettime(CLOCK_MONOTONIC, &start_point);
 	
 	int i = 1;
 	while (i <= opts.runs) {
 		opts.verbose && fprintf(stderr, "Run #%d\r", i);
 		struct timespec before_point;
-		clock_gettime(CLOCK_MONOTONIC_RAW, &before_point);
+		clock_gettime(CLOCK_MONOTONIC, &before_point);
 
 		int word_index = 0;
 		while (opts.words[word_index]) {
@@ -201,17 +201,16 @@ void print_closest_segment (FILE *stream, size_t* levenstein_buffer, const char 
 {
 	uint8_t segment_length = (uint8_t)strlen(segment);
 	
-	if (abs(word_len - segment_length) <= max_length_diff) {
-		if (word_len == segment_length && !strcasecmp(word, segment)) {
-			fprintf(stream, "0\t%s\n", segment);
+	if (word_len == segment_length && !strcasecmp(word, segment)) {
+		fprintf(stream, "0\t%s\n", segment);
+		
+	} else {
+		size_t segment_len = strlen(segment);
+		
+		size_t result;
+		if (abs(word_len - segment_len) <= max_length_diff) {
 			
-		} else {
-
-			size_t word_len = strlen(word);
-			size_t segment_len = strlen(segment);
-			
-			size_t result = levenstein(word, word_len, segment, segment_len, levenstein_buffer, segment_size);
-			
+			result = levenstein(word, word_len, segment, segment_len, levenstein_buffer, segment_size);
 			if (result <= max_lev_diff) {
 				fprintf(stream, "%d\t%s\n", (int)result, segment);
 			}
@@ -308,7 +307,7 @@ void read_opts (const int argc, const char **argv, struct Options *opts)
 void diff_time(struct timespec start_point, struct TimePair *time_pair)
 {
 	struct timespec end_point;
-	clock_gettime(CLOCK_MONOTONIC_RAW, &end_point);
+	clock_gettime(CLOCK_MONOTONIC, &end_point);
 
 	if (end_point.tv_nsec < start_point.tv_nsec) {
 		time_pair->nano = 1000000000 - start_point.tv_nsec + end_point.tv_nsec;
